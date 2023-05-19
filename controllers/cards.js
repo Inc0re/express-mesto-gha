@@ -35,7 +35,15 @@ const deleteCard = (req, res) => {
         res.send({ data: card });
       }
     })
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(400)
+          .send({ message: `Некорректный id карточки ${req.params.cardId}` });
+      } else {
+        res.status(500).send({ message: err.message });
+      }
+    });
 };
 
 // Errors: 400 - bad request, 404 - not found, 500 - server error
@@ -56,11 +64,9 @@ const likeCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(400)
-          .send({
-            message: 'Переданы некорректные данные для постановки лайка',
-          });
+        res.status(400).send({
+          message: 'Переданы некорректные данные для постановки лайка',
+        });
       } else {
         res.status(500).send({ message: err.message });
       }
@@ -85,11 +91,9 @@ const dislikeCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(400)
-          .send({
-            message: 'Переданы некорректные данные для снятия лайка',
-          });
+        res.status(400).send({
+          message: 'Переданы некорректные данные для снятия лайка',
+        });
       } else {
         res.status(500).send({ message: err.message });
       }
