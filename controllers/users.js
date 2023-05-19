@@ -44,7 +44,7 @@ const createUser = (req, res) => {
     });
 };
 
-//
+// Errors: 400 - bad request, 404 - not found, 500 - server error
 const updateUser = (req, res) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
@@ -53,14 +53,51 @@ const updateUser = (req, res) => {
     {
       new: true,
       runValidators: true,
-      upsert: true,
+      upsert: false,
     },
   )
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(404)
+          .send({ message: `Не найден пользователь с id ${req.user._id}` });
+      }
+      return res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(400).send({
           message: 'Переданы некорректные данные при обновлении профиля',
+        });
+      }
+      return res.status(500).send({ message: err.message });
+    });
+};
+
+// Errors: 400 - bad request, 404 - not found, 500 - server error
+const updateUserAvatar = (req, res) => {
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(
+    req.user._id,
+    { avatar },
+    {
+      new: true,
+      runValidators: true,
+      upsert: false,
+    },
+  )
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(404)
+          .send({ message: `Не найден пользователь с id ${req.user._id}` });
+      }
+      return res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({
+          message: 'Переданы некорректные данные при обновлении аватара',
         });
       }
       return res.status(500).send({ message: err.message });
@@ -72,4 +109,5 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
+  updateUserAvatar,
 };
