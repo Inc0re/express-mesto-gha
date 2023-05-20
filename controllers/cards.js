@@ -1,8 +1,5 @@
 const Card = require('../models/card');
-
-const badRequestError = 400;
-const notFoundError = 404;
-const serverError = 500;
+const { serverError, badRequestError, notFoundError } = require('../utils/constants');
 
 // Errors: 500 - server error
 const getCards = (req, res) => {

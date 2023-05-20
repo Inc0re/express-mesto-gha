@@ -1,8 +1,5 @@
 const User = require('../models/user');
-
-const badRequestError = 400;
-const notFoundError = 404;
-const serverError = 500;
+const { serverError, badRequestError, notFoundError } = require('../utils/constants');
 
 // Errors: 500 - server error
 const getUsers = (req, res) => {
