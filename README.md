@@ -4,6 +4,18 @@
 
 Ссылка на репозиторий: [https://github.com/Inc0re/express-mesto-gha](https://github.com/Inc0re/express-mesto-gha)
 
+## **Описание**
+
+Бэкенд для проекта Mesto
+
+[Ссылка на репозиторий фронтенда](https://github.com/Inc0re/react-mesto-auth)
+
+[Открыть проект Mesto на GitHub Pages](https://inc0re.github.io/react-mesto-auth/)
+
+## Стек
+
+JS, Node.js, Express.js, MongoDB, Mongoose, Editorconfig, ESlint (airbnb-base), REST API
+
 ## Директории
 
 `/routes` — папка с файлами роутера
