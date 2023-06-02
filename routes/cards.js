@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const checkCardOwner = require('../middlewares/checkCardOwner');
 
 const {
   createCard,
@@ -10,7 +11,7 @@ const {
 
 router.post('/', createCard);
 router.get('/', getCards);
-router.delete('/:cardId', deleteCard);
+router.delete('/:cardId', checkCardOwner, deleteCard);
 router.delete('/:cardId/likes', dislikeCard);
 router.put('/:cardId/likes', likeCard);
 

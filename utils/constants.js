@@ -3,6 +3,7 @@ const { JWT_SECRET = 'super-secret-key' } = process.env;
 module.exports = {
   badRequestError: 400,
   notFoundError: 404,
+  forbiddenError: 403,
   serverError: 500,
   unauthorizedError: 401,
   createdStatus: 201,
