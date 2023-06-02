@@ -1,9 +1,9 @@
-const badRequestError = 400;
-const notFoundError = 404;
-const serverError = 500;
-
 module.exports = {
-  badRequestError,
-  notFoundError,
-  serverError,
+  badRequestError: 400,
+  notFoundError: 404,
+  serverError: 500,
+  unauthorizedError: 401,
+  createdStatus: 201,
+  mongoDuplicateKeyError: 11000,
+  saltRounds: 10,
 };

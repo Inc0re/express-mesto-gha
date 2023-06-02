@@ -1,5 +1,17 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { serverError, badRequestError, notFoundError } = require('../utils/constants');
+const {
+  serverError,
+  badRequestError,
+  notFoundError,
+  unauthorizedError,
+  saltRounds,
+  mongoDuplicateKeyError,
+  createdStatus,
+} = require('../utils/constants');
+
+const { SECRET_KEY = 'super-secret-key' } = process.env;
 
 // Errors: 500 - server error
 const getUsers = (req, res) => {
@@ -32,13 +44,41 @@ const getUserById = (req, res) => {
 
 // Errors: 400 - bad request, 500 - server error
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
+
+  bcrypt
+    .hash(password, saltRounds)
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+      about,
+      avatar,
+    }))
+    .then((user) => {
+      // send user without password
+      res
+        .status(createdStatus)
+        .send({
+          data: {
+            email: user.email,
+            name: user.name,
+            about: user.about,
+            avatar: user.avatar,
+          },
+        });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         return res.status(badRequestError).send({
           message: 'Переданы некорректные данные при создании пользователя',
+        });
+      }
+      if (err.code === mongoDuplicateKeyError) {
+        return res.status(badRequestError).send({
+          message: 'Пользователь с таким email уже существует',
         });
       }
       return res.status(serverError).send({ message: err.message });
@@ -105,10 +145,23 @@ const updateUserAvatar = (req, res) => {
     });
 };
 
+// Errors: 400 - bad request, 500 - server error
+const login = (req, res) => {
+  const { email, password } = req.body;
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      res.send({ token: jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' }) });
+    })
+    .catch((err) => {
+      res.status(unauthorizedError).send({ message: err.message });
+    });
+};
+
 module.exports = {
   getUsers,
   getUserById,
   createUser,
   updateUser,
   updateUserAvatar,
+  login,
 };
