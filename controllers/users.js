@@ -20,13 +20,13 @@ const getUsers = (req, res) => {
 };
 
 // Errors: 400 - bad request, 404 - not found, 500 - server error
-const getUserById = (req, res) => {
-  User.findById(req.params.id)
+const getUser = (id, res) => {
+  User.findById(id)
     .then((user) => {
       if (!user) {
         res
           .status(notFoundError)
-          .send({ message: `Не найден пользователь с id ${req.params.id}` });
+          .send({ message: `Не найден пользователь с id ${id}` });
         return;
       }
       res.send({ data: user });
@@ -35,10 +35,18 @@ const getUserById = (req, res) => {
       if (err.name === 'CastError') {
         return res
           .status(badRequestError)
-          .send({ message: `Некорректный id пользователя ${req.params.id}` });
+          .send({ message: `Некорректный id пользователя ${id}` });
       }
       return res.status(serverError).send({ message: err.message });
     });
+};
+
+const getUserById = (req, res) => {
+  getUser(req.params.id, res);
+};
+
+const getUserByMe = (req, res) => {
+  getUser(req.user, res);
 };
 
 // Errors: 400 - bad request, 500 - server error
@@ -158,12 +166,14 @@ const login = (req, res) => {
     })
     .catch((err) => {
       res.status(unauthorizedError).send({ message: err.message });
+      console.log(err);
     });
 };
 
 module.exports = {
   getUsers,
   getUserById,
+  getUserByMe,
   createUser,
   updateUser,
   updateUserAvatar,
