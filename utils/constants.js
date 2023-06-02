@@ -1,3 +1,5 @@
+const { JWT_SECRET = 'super-secret-key' } = process.env;
+
 module.exports = {
   badRequestError: 400,
   notFoundError: 404,
@@ -6,4 +8,5 @@ module.exports = {
   createdStatus: 201,
   mongoDuplicateKeyError: 11000,
   saltRounds: 10,
+  jwtSecret: JWT_SECRET,
 };

@@ -9,9 +9,8 @@ const {
   saltRounds,
   mongoDuplicateKeyError,
   createdStatus,
+  jwtSecret,
 } = require('../utils/constants');
-
-const { SECRET_KEY = 'super-secret-key' } = process.env;
 
 // Errors: 500 - server error
 const getUsers = (req, res) => {
@@ -150,7 +149,12 @@ const login = (req, res) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
-      res.send({ token: jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' }) });
+      // res.send({ token: jwt.sign({ _id: user._id }, jwtSecret, { expiresIn: '7d' }) });
+      const token = jwt.sign({ _id: user._id }, jwtSecret, { expiresIn: '7d' });
+      res.cookie('token', token, {
+        httpOnly: true,
+      });
+      res.status(200).send({ message: 'Авторизация прошла успешно' });
     })
     .catch((err) => {
       res.status(unauthorizedError).send({ message: err.message });
