@@ -2,10 +2,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
-  serverError,
-  badRequestError,
-  notFoundError,
-  unauthorizedError,
+  BadRequestError,
+  UnauthorizedError,
+  NotFoundError,
+} = require('../utils/errors');
+const {
   saltRounds,
   mongoDuplicateKeyError,
   createdStatus,
@@ -13,44 +14,39 @@ const {
 } = require('../utils/constants');
 
 // Errors: 500 - server error
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => res.status(serverError).send({ message: err.message }));
+    .catch(next);
 };
 
 // Errors: 400 - bad request, 404 - not found, 500 - server error
-const getUser = (id, res) => {
+const getUser = (id, res, next) => {
   User.findById(id)
     .then((user) => {
       if (!user) {
-        res
-          .status(notFoundError)
-          .send({ message: `Не найден пользователь с id ${id}` });
-        return;
+        return next(new NotFoundError(`Не найден пользователь с id ${id}`));
       }
-      res.send({ data: user });
+      return res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res
-          .status(badRequestError)
-          .send({ message: `Некорректный id пользователя ${id}` });
+        return next(new BadRequestError(`Некорректный id пользователя ${id}`));
       }
-      return res.status(serverError).send({ message: err.message });
+      return next(err);
     });
 };
 
-const getUserById = (req, res) => {
-  getUser(req.params.id, res);
+const getUserById = (req, res, next) => {
+  getUser(req.params.id, res, next);
 };
 
-const getUserByMe = (req, res) => {
-  getUser(req.user, res);
+const getUserByMe = (req, res, next) => {
+  getUser(req.user, res, next);
 };
 
 // Errors: 400 - bad request, 500 - server error
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     email, password, name, about, avatar,
   } = req.body;
@@ -79,21 +75,17 @@ const createUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(badRequestError).send({
-          message: 'Переданы некорректные данные при создании пользователя',
-        });
+        return next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
       }
       if (err.code === mongoDuplicateKeyError) {
-        return res.status(badRequestError).send({
-          message: 'Пользователь с таким email уже существует',
-        });
+        return next(new BadRequestError('Пользователь с таким email уже существует'));
       }
-      return res.status(serverError).send({ message: err.message });
+      return next(err);
     });
 };
 
 // Errors: 400 - bad request, 404 - not found, 500 - server error
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -106,24 +98,20 @@ const updateUser = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(notFoundError)
-          .send({ message: `Не найден пользователь с id ${req.user._id}` });
+        return next(new NotFoundError(`Не найден пользователь с id ${req.user._id}`));
       }
       return res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(badRequestError).send({
-          message: 'Переданы некорректные данные при обновлении профиля',
-        });
+        return next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
       }
-      return res.status(serverError).send({ message: err.message });
+      return next(err);
     });
 };
 
 // Errors: 400 - bad request, 404 - not found, 500 - server error
-const updateUserAvatar = (req, res) => {
+const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -136,28 +124,25 @@ const updateUserAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(notFoundError)
-          .send({ message: `Не найден пользователь с id ${req.user._id}` });
+        return next(new NotFoundError(`Не найден пользователь с id ${req.user._id}`));
       }
       return res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(badRequestError).send({
-          message: 'Переданы некорректные данные при обновлении аватара',
-        });
+        return next(new BadRequestError(
+          'Переданы некорректные данные при обновлении аватара',
+        ));
       }
-      return res.status(serverError).send({ message: err.message });
+      return next(err);
     });
 };
 
 // Errors: 400 - bad request, 500 - server error
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findUserByCredentials(email, password)
     .then((user) => {
-      // res.send({ token: jwt.sign({ _id: user._id }, jwtSecret, { expiresIn: '7d' }) });
       const token = jwt.sign({ _id: user._id }, jwtSecret, { expiresIn: '7d' });
       res.cookie('token', token, {
         httpOnly: true,
@@ -165,8 +150,7 @@ const login = (req, res) => {
       res.status(200).send({ message: 'Авторизация прошла успешно' });
     })
     .catch((err) => {
-      res.status(unauthorizedError).send({ message: err.message });
-      console.log(err);
+      next(new UnauthorizedError(err.message));
     });
 };
 
