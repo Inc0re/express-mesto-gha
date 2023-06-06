@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const checkCardOwner = require('../middlewares/checkCardOwner');
+const checkCardOwner = require('../middlewares/check-card-owner');
 
 const {
   createCard,
