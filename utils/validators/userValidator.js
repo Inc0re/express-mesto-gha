@@ -22,4 +22,9 @@ module.exports = {
       avatar: Joi.string().pattern(urlTemplate),
     }),
   },
+  userID: {
+    params: Joi.object().keys({
+      id: Joi.string().hex().length(24),
+    }),
+  },
 };
