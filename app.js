@@ -9,7 +9,6 @@ const { celebrate, errors } = require('celebrate');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 const { NotFoundError } = require('./utils/errors');
-const { serverError } = require('./utils/constants');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const userValidator = require('./utils/validators/userValidator');
