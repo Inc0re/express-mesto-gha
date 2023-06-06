@@ -1,6 +1,8 @@
 /* eslint-disable no-console */
 const express = require('express');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const { celebrate, errors } = require('celebrate');
@@ -11,9 +13,21 @@ const { serverError } = require('./utils/constants');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const userValidator = require('./utils/validators/userValidator');
+const errorHandler = require('./middlewares/error-handler');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+app.use(limiter);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -40,19 +54,7 @@ app.use((req, res, next) => {
 app.use(errors());
 
 // Handle errors
-app.use((err, req, res, next) => {
-  const { statusCode = serverError, message } = err;
-
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === serverError
-        ? 'На сервере произошла ошибка'
-        : message,
-    });
-
-  next();
-});
+app.use(errorHandler);
 
 // Start the server
 app.listen(PORT, () => {
