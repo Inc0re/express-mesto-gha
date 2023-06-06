@@ -5,6 +5,7 @@ const {
   BadRequestError,
   UnauthorizedError,
   NotFoundError,
+  ConflictError,
 } = require('../utils/errors');
 const {
   saltRounds,
@@ -45,7 +46,7 @@ const getUserByMe = (req, res, next) => {
   getUser(req.user, res, next);
 };
 
-// Errors: 400 - bad request, 500 - server error
+// Errors: 400 - bad request, 409 - conflict, 500 - server error
 const createUser = (req, res, next) => {
   const {
     email, password, name, about, avatar,
@@ -78,7 +79,7 @@ const createUser = (req, res, next) => {
         return next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
       }
       if (err.code === mongoDuplicateKeyError) {
-        return next(new BadRequestError('Пользователь с таким email уже существует'));
+        return next(new ConflictError('Пользователь с таким email уже существует'));
       }
       return next(err);
     });
