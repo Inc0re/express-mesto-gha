@@ -8,4 +8,9 @@ module.exports = {
       link: Joi.string().required().pattern(urlTemplate),
     }),
   },
+  cardId: {
+    params: Joi.object().keys({
+      cardId: Joi.string().hex().length(24),
+    }),
+  },
 };
