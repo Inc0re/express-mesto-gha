@@ -9,6 +9,8 @@ const { NotFoundError } = require('./utils/errors');
 const { serverError } = require('./utils/constants');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
+const { celebrate, errors } = require('celebrate');
+const userValidator = require('./utils/validators/userValidator');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -23,14 +25,19 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+// Unprotected routes
+app.post('/signin', celebrate(userValidator.createOrLogin), login);
+app.post('/signup', celebrate(userValidator.createOrLogin), createUser);
 
+// Protected routes
 app.use('/users', auth, usersRouter);
 app.use('/cards', auth, cardsRouter);
 app.use((req, res, next) => {
   next(new NotFoundError('Запрашиваемый ресурс не найден'));
 });
+
+// Celebrate errors
+app.use(errors());
 
 // Handle errors
 app.use((err, req, res, next) => {
@@ -39,7 +46,6 @@ app.use((err, req, res, next) => {
   res
     .status(statusCode)
     .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
       message: statusCode === serverError
         ? 'На сервере произошла ошибка'
         : message,
