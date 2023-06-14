@@ -13,6 +13,7 @@ const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const userValidator = require('./utils/validators/userValidator');
 const errorHandler = require('./middlewares/error-handler');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -38,6 +39,9 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+// Request logger
+app.use(requestLogger);
+
 // Unprotected routes
 app.post('/signin', celebrate(userValidator.createOrLogin), login);
 app.post('/signup', celebrate(userValidator.createOrLogin), createUser);
@@ -48,6 +52,9 @@ app.use('/cards', auth, cardsRouter);
 app.use((req, res, next) => {
   next(new NotFoundError('Запрашиваемый ресурс не найден'));
 });
+
+// Error logger
+app.use(errorLogger);
 
 // Celebrate errors
 app.use(errors());
